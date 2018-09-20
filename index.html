@@ -29,7 +29,7 @@
 </body>
 
 <script>
-  var settings = {
+  const settings = {
     image : 'trap_codes.jpg',
 
     layers : 5,
@@ -113,14 +113,26 @@
     ],
   };
 
-  styleBody();
+  const f = {
+    coin : p => Math.random() < p,
 
-  function styleBody() {
-    var blur       = coin(settings.probability) ? settings.blur.default       : settings.blur.altered;
-    var brightness = coin(settings.probability) ? settings.brightness.default : settings.brightness.altered;
-    var contrast   = coin(settings.probability) ? settings.contrast.default   : settings.contrast.altered;
-    var saturate   = coin(settings.probability) ? settings.saturate.default   : settings.saturate.altered;
-    var invert     = coin(settings.probability) ? settings.invert.default     : settings.invert.altered;
+    randomIntegerInclusive : (min, max) => {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
+
+    randomFloat : (min, max) => Math.random() * (max - min) + min,
+
+    randomItem : array => array[Math.floor(Math.random() * array.length)],
+  }
+
+  const styleBody = () => {
+    let blur       = f.coin(settings.probability) ? settings.blur.default       : settings.blur.altered;
+    let brightness = f.coin(settings.probability) ? settings.brightness.default : settings.brightness.altered;
+    let contrast   = f.coin(settings.probability) ? settings.contrast.default   : settings.contrast.altered;
+    let saturate   = f.coin(settings.probability) ? settings.saturate.default   : settings.saturate.altered;
+    let invert     = f.coin(settings.probability) ? settings.invert.default     : settings.invert.altered;
 
     blur       = 'blur('       + blur       + 'px)';
     brightness = 'brightness(' + brightness + '%)';
@@ -128,71 +140,55 @@
     saturate   = 'saturate('   + saturate   + '%)';
     invert     = 'invert('     + invert     + '%)';
 
-    var filter = [blur, brightness, contrast, saturate, invert].join(' ');
+    const filter = [blur, brightness, contrast, saturate, invert].join(' ');
     document.body.style.filter = filter;
 
-    var delay = randomIntegerInclusive(settings.delay.body.min, settings.delay.body.max);
+    const delay = f.randomIntegerInclusive(settings.delay.body.min, settings.delay.body.max);
     setTimeout(styleBody, delay);
   }
 
-  for (var i = 0; i < settings.layers; i++) {
-    (function(i) {
-      var img = document.createElement('img');
+  for (let i = 0; i < settings.layers; i++) {
+    (i => {
+      const img = document.createElement('img');
       document.body.appendChild(img);
       img.src = settings.image;
 
-      styleImage();
-
-      function styleImage() {
-        var translate = {
-          x : randomIntegerInclusive(-settings.translate.x, settings.translate.x),
-          y : randomIntegerInclusive(-settings.translate.y, settings.translate.y),
+      const styleImage = () => {
+        let translate = {
+          x : f.randomIntegerInclusive(-settings.translate.x, settings.translate.x),
+          y : f.randomIntegerInclusive(-settings.translate.y, settings.translate.y),
         };
 
-        translate.multiply = coin(settings.probability) ? settings.translate.multiply.default : settings.translate.multiply.altered;
+        translate.multiply = f.coin(settings.probability) ? settings.translate.multiply.default : settings.translate.multiply.altered;
 
         [translate.x, translate.y] = [translate.x, translate.y].map(n => n * translate.multiply);
 
         translate = 'translate(' + translate.x + 'px, ' + translate.y + 'px)';
 
-        var scale = {
-          x : coin(settings.probability) ? settings.scale.default : settings.scale.altered,
-          y : coin(settings.probability) ? settings.scale.default : settings.scale.altered,
+        let scale = {
+          x : f.coin(settings.probability) ? settings.scale.default : settings.scale.altered,
+          y : f.coin(settings.probability) ? settings.scale.default : settings.scale.altered,
         };
 
         scale = 'scale(' + scale.x + ', ' + scale.y + ')';
 
-        var transform    = [translate, scale].join(' ');
-        var opacity      = randomFloat(settings.opacity.min, settings.opacity.max);
-        var mixBlendMode = randomItem(settings.blendModes);
+        const transform    = [translate, scale].join(' ');
+        const opacity      = f.randomFloat(settings.opacity.min, settings.opacity.max);
+        const mixBlendMode = f.randomItem(settings.blendModes);
 
         img.style.transform    = transform;
         img.style.opacity      = opacity;
         img.style.mixBlendMode = mixBlendMode;
 
-        var delay = randomIntegerInclusive(settings.delay.image.min, settings.delay.image.max);
+        const delay = f.randomIntegerInclusive(settings.delay.image.min, settings.delay.image.max);
         setTimeout(styleImage, delay);
       }
+
+      styleImage();
     })(i);
   }
 
-  function coin(p) {
-    return Math.random() < p;
-  }
-
-  function randomIntegerInclusive(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  function randomFloat(min, max) {
-    return Math.random() * (max - min) + min;
-  }
-
-  function randomItem(array) {
-    return array[Math.floor(Math.random() * array.length)];
-  }
+  styleBody();
 </script>
 
 </html>
