@@ -125,7 +125,7 @@
     randomFloat : (min, max) => Math.random() * (max - min) + min,
 
     randomItem : array => array[Math.floor(Math.random() * array.length)],
-  }
+  };
 
   const styleBody = () => {
     let blur       = f.coin(settings.probability) ? settings.blur.default       : settings.blur.altered;
