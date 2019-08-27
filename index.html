@@ -37,80 +37,89 @@
     probability : 0.95,
 
     delay : {
-      image : {
-        min : 100,
-        max : 200,
-      },
-
-      body : {
+      filter : {
         min :  100,
         max : 1000,
       },
-    },
 
-    blur : {
-      default : 0,
-      altered : 2,
-    },
-
-    brightness : {
-      default :  100,
-      altered : 1000,
-    },
-
-    contrast : {
-      default :  100,
-      altered : 1000,
-    },
-
-    saturate : {
-      default :  100,
-      altered : 1000,
-    },
-
-    invert : {
-      default :   0,
-      altered : 100,
-    },
-
-    translate : {
-      x : 10,
-      y : 10,
-
-      multiply : {
-        default :  1,
-        altered : 10,
+      layer : {
+        min : 100,
+        max : 200,
       },
     },
 
-    scale : {
-      default : 1,
-      altered : 2,
+    filter : {
+      blur : {
+        def : 0,
+        alt : 2,
+        symbol : 'px',
+      },
+
+      brightness : {
+        def :  100,
+        alt : 1000,
+        symbol : '%',
+      },
+
+      contrast : {
+        def :  100,
+        alt : 1000,
+        symbol : '%',
+      },
+
+      saturate : {
+        def :  100,
+        alt : 1000,
+        symbol : '%',
+      },
+
+      invert : {
+        def :   0,
+        alt : 100,
+        symbol : '%',
+      },
     },
 
-    opacity : {
-      min : 0.5,
-      max : 1.0,
-    },
+    layer : {
+      translate : {
+        x : 10,
+        y : 10,
 
-    blendModes : [
-      'normal',
-      'multiply',
-      'screen',
-      'overlay',
-      'darken',
-      'lighten',
-      'color-dodge',
-      'color-burn',
-      'hard-light',
-      'soft-light',
-      'difference',
-      'exclusion',
-      'hue',
-      'saturation',
-      'color',
-      'luminosity',
-    ],
+        multiply : {
+          def :  1,
+          alt : 10,
+        },
+      },
+
+      scale : {
+        def : 1,
+        alt : 2,
+      },
+
+      opacity : {
+        min : 0.5,
+        max : 1.0,
+      },
+
+      blendModes : [
+        'normal',
+        'multiply',
+        'screen',
+        'overlay',
+        'darken',
+        'lighten',
+        'color-dodge',
+        'color-burn',
+        'hard-light',
+        'soft-light',
+        'difference',
+        'exclusion',
+        'hue',
+        'saturation',
+        'color',
+        'luminosity',
+      ],
+    },
   };
 
   const f = {
@@ -124,71 +133,52 @@
 
     randomFloat : (min, max) => Math.random() * (max - min) + min,
 
+    randomIntegerInRange : ({min, max}) => f.randomIntegerInclusive(min, max),
+    randomFloatInRange   : ({min, max}) => f.randomFloat(min, max),
+
+    flip : (probability, {def, alt}) => f.coin(probability) ? def : alt,
+
     randomItem : array => array[Math.floor(Math.random() * array.length)],
   };
 
-  const styleBody = () => {
-    let blur       = f.coin(settings.probability) ? settings.blur.default       : settings.blur.altered;
-    let brightness = f.coin(settings.probability) ? settings.brightness.default : settings.brightness.altered;
-    let contrast   = f.coin(settings.probability) ? settings.contrast.default   : settings.contrast.altered;
-    let saturate   = f.coin(settings.probability) ? settings.saturate.default   : settings.saturate.altered;
-    let invert     = f.coin(settings.probability) ? settings.invert.default     : settings.invert.altered;
+  const filter = () => {
+    document.body.style.filter = Object.entries(settings.filter).map(([property, {def, alt, symbol}]) => {
+      const value = f.flip(settings.probability, {def, alt});
+      return `${property}(${value}${symbol})`;
+    }).join(' ');
 
-    blur       = 'blur('       + blur       + 'px)';
-    brightness = 'brightness(' + brightness + '%)';
-    contrast   = 'contrast('   + contrast   + '%)';
-    saturate   = 'saturate('   + saturate   + '%)';
-    invert     = 'invert('     + invert     + '%)';
-
-    const filter = [blur, brightness, contrast, saturate, invert].join(' ');
-    document.body.style.filter = filter;
-
-    const delay = f.randomIntegerInclusive(settings.delay.body.min, settings.delay.body.max);
-    setTimeout(styleBody, delay);
+    setTimeout(filter, f.randomIntegerInRange(settings.delay.filter));
   }
 
   for (let i = 0; i < settings.layers; i++) {
-    (i => {
-      const img = document.createElement('img');
-      document.body.appendChild(img);
-      img.src = settings.image;
+    const img = document.createElement('img');
+    document.body.appendChild(img);
+    img.src = settings.image;
 
-      const styleImage = () => {
-        let translate = {
-          x : f.randomIntegerInclusive(-settings.translate.x, settings.translate.x),
-          y : f.randomIntegerInclusive(-settings.translate.y, settings.translate.y),
-        };
-
-        translate.multiply = f.coin(settings.probability) ? settings.translate.multiply.default : settings.translate.multiply.altered;
-
-        [translate.x, translate.y] = [translate.x, translate.y].map(n => n * translate.multiply);
-
-        translate = 'translate(' + translate.x + 'px, ' + translate.y + 'px)';
-
-        let scale = {
-          x : f.coin(settings.probability) ? settings.scale.default : settings.scale.altered,
-          y : f.coin(settings.probability) ? settings.scale.default : settings.scale.altered,
-        };
-
-        scale = 'scale(' + scale.x + ', ' + scale.y + ')';
-
-        const transform    = [translate, scale].join(' ');
-        const opacity      = f.randomFloat(settings.opacity.min, settings.opacity.max);
-        const mixBlendMode = f.randomItem(settings.blendModes);
-
-        img.style.transform    = transform;
-        img.style.opacity      = opacity;
-        img.style.mixBlendMode = mixBlendMode;
-
-        const delay = f.randomIntegerInclusive(settings.delay.image.min, settings.delay.image.max);
-        setTimeout(styleImage, delay);
+    const style = () => {
+      const translate = () => {
+        const multiply = f.flip(settings.probability, settings.layer.translate.multiply);
+        let {x, y} = settings.layer.translate;
+        [x, y] = [x, y].map(n => f.randomIntegerInclusive(-n, n) * multiply);
+        return `translate(${x}px, ${y}px)`;
       }
 
-      styleImage();
-    })(i);
+      const scale = () => {
+        const [x, y] = Array.from({length: 2}, () => f.flip(settings.probability, settings.layer.scale));
+        return `scale(${x}, ${y})`;
+      }
+
+      img.style.transform    = `${translate()} ${scale()}`;
+      img.style.opacity      = f.randomFloatInRange(settings.layer.opacity);
+      img.style.mixBlendMode = f.randomItem(settings.layer.blendModes);
+
+      setTimeout(style, f.randomIntegerInRange(settings.delay.layer));
+    }
+
+    style();
   }
 
-  styleBody();
+  filter();
 </script>
 
 </html>
