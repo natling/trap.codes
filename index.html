@@ -142,10 +142,12 @@
   };
 
   const filter = () => {
-    document.body.style.filter = Object.entries(settings.filter).map(([property, {def, alt, symbol}]) => {
+    document.body.style.filter = Object.entries(settings.filter)
+    .map(([property, {def, alt, symbol}]) => {
       const value = f.flip(settings.probability, {def, alt});
       return `${property}(${value}${symbol})`;
-    }).join(' ');
+    })
+    .join(' ');
 
     setTimeout(filter, f.randomIntegerInRange(settings.delay.filter));
   }
